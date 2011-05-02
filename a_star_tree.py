@@ -31,8 +31,14 @@ class Node(object):
         Estimate distance from the end of the alignment, based on the number
         of remaining characters to compare.
         """
-        # FIXME: counts even trailing '-'
-        return len(self.s1) - self.i - 1 + len(self.s2) - self.j -1
+        s1_n_chars = len(self.s1.replace('-', ''))
+        s2_n_chars = len(self.s2.replace('-', ''))
+        dist = 0
+        if self.i < s1_n_chars:
+            dist += s1_n_chars - self.i - 1
+        if self.j < s2_n_chars:
+            dist += s2_n_chars - self.j - 1
+        return dist
 
     def childs(self):
         """ return list of child nodes, build them if necessary """
