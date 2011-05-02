@@ -103,9 +103,12 @@ def a_star(s1, s2):
             open_set.remove(x)
             closed_set.add(x)
 
-        if len(open_set) == 1 and open_set[0].ends_align():
-            # optimum alignment found!!!
-            return open_set[0].reconstruct_path()
+        # goal if only one open remains, should end the alignment
+        if len(open_set) == 1:
+            last = open_set.pop()
+            if last.ends_align():
+                # optimum alignment found!!!
+                return last.reconstruct_path()
 
         for y in x.childs():
             if y in closed_set:
