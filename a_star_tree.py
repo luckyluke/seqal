@@ -39,8 +39,9 @@ class Node(object):
             dist += s1_n_chars - self.i - 1
         if self.j < s2_n_chars:
             dist += s2_n_chars - self.j - 1
-        return dist
-
+        #return dist
+        return 0
+        
     def childs(self):
         """ return list of child nodes, build them if necessary """
         self.sub_before = Node(self.i, self.j+1, self.s1, self.s2)
@@ -112,27 +113,26 @@ def a_star(s1, s2):
     while open_set:
         x = min(open_set, key=f_score.get)
         
-        print "\n\n\ncurrent node: ",x
-        print "i: "+str(x.i),"j:"+str(x.j)
-        print "----------------------"
-        print "open_set: ", open_set
-        print "closed_set: ",closed_set
-        print "----------------------"
+        print    "\n\n\ncurrent node: ",x
+        print    "i: "+str(x.i),"j:"+str(x.j)
+        print    "----------------------"
+        print    "open_set: ", open_set
+        print    "closed_set: ",closed_set
+        print    "----------------------"
         
         #remove/add lowest cost node from open_set/closed_set and use it as current node
         open_set.remove(x)
         closed_set.add(x)
         
-        print "open_set: ", open_set
-        print "closed_set: ",closed_set        
-        print "----------------------"
+        print    "open_set: ", open_set
+        print    "closed_set: ",closed_set        
+        print    "----------------------"
         
-        print "Currently processing %d nodes. len(OPEN_SET)=%d. len(CLOSED_SET)=%d" %((len(open_set)+len(closed_set)),len(open_set),len(closed_set))
+        print "Currently processing %d total nodes. len(OPEN_SET)=%d. len(CLOSED_SET)=%d" %((len(open_set)+len(closed_set)),len(open_set),len(closed_set))
         
         #goal test
         if x.ends_align():
-            print "GOAL!!"
-            print "Substitution cost: %d" %(g_score[x])
+            print "\nSUBSTITUTION COST: %d" %(g_score[x])
             return x.reconstruct_path()
         
         
@@ -141,23 +141,23 @@ def a_star(s1, s2):
         for y in x.childs():
             #we need to check if child node has previously been tested
             #because we are expanding a graph instead of a tree
-            print "Y, Child of X: ",y
+            print    "Y, Child of X: ",y
             if y in closed_set:
                 continue
             
             # posso fare x - y TODO
             y_g_score = g_score[x] + dist(x, y)
             if y not in open_set:
-                print y, " wasn't in open_set. I add it."
+                print    y, " wasn't in open_set. I add it."
                 open_set.add(y)
                 y_better = True
 
             elif y_g_score < g_score[y]:
-                print y, " was in open_set. This new is better than old node."
+                print    y, " was in open_set. This new is better than old node."
                 y_better = True
 
             else:
-                print y, " is worst. This child will be ignored."
+                print    y, " is worst. This child will be ignored."
                 y_better = False
 
             if y_better:
@@ -165,9 +165,9 @@ def a_star(s1, s2):
                 g_score[y] = y_g_score
                 h_score[y] = y.estimate_dist_goal()
                 f_score[y] = g_score[y] + h_score[y]
-                print "g_score[y]: ",g_score[y]
-                print "h_score[y]: ",h_score[y]
-                print "f_score[y]: ",f_score[y]
+                print    "g_score[y]: ",g_score[y]
+                print    "h_score[y]: ",h_score[y]
+                print    "f_score[y]: ",f_score[y]
                 
         #sys.stdin.read(1)
         
@@ -190,12 +190,15 @@ def prepare_strings(s1, s2):
 
     return s1.lower(), s2.lower()
 
-s1 = 'tccgaatagctagctacgggggggtagctacgtagcatgctacatcgatg'
-s2 = 'tagtatcgatctatatctcta'
-#s1 = 'ac'
-#s2 = 'c'
+s1 = 'tagaaa'
+s2 = 'aaaa'
+#s1 = 'cagata'
+#s2 = 'taggata'
 
 if __name__=='__main__':
+    print "-----------------"
+    print "ALIGNMENT  BEGIN:"
+    print "-----------------"
     o = a_star(*prepare_strings(s1, s2))
     ns1=''
     ns2=''
@@ -203,13 +206,18 @@ if __name__=='__main__':
         if o[i].i == o[i+1].i:
             ns1+='-'
         else:
-            ns1+=s1[o[i].i]
+            ns1+=o[i].s1[o[i].i]
         if o[i].j == o[i+1].j:
             ns2+='-'
         else:
-            ns2+=s2[o[i].j]
-    print s1
-    print s2
-    print "-------"
+            ns2+=o[i].s2[o[i].j]
+    print "-----------------"        
+    print "END OF ALIGNMENT:"
+    print "-----------------"
+    print o[0].s1
+    print o[0].s2
+    print "-----------------"
     print ns1
     print ns2
+    print "-----------------"
+            
