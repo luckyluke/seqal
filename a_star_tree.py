@@ -3,7 +3,7 @@
 """
 Implementation of sequence alignment using A*
 """
-
+import sys
 class Node(object):
     def __init__(self, i, j, s1, s2, parent=None):
         # indexes of the 2 chars identifying the node
@@ -21,7 +21,8 @@ class Node(object):
 
     def ends_align(self):
         """ Return True if the node is the last one for an alignment """
-        return self.s1[self.i] == '-' and self.s2[self.j] == '-'
+        #return self.s1[self.i] == '-' and self.s2[self.j] == '-'
+        return (self.i==len(self.s1) and self.j==len(self.s2))
         #return False
 
     def estimate_dist_goal(self):
@@ -53,7 +54,9 @@ class Node(object):
             p.append(self)
             return p
         else:
-            return []
+            p=[]
+            p.append(Node(0, 0, self.s1, self.s2))
+            return p
 
     def __str__(self):
         #return '%d %d %s' %(self.i, self.j, hash(self))
@@ -74,23 +77,29 @@ S = {'a':{'a':0, 'c':1, 'g':2, 't':1, '-':1},
      'c':{'a':1, 'c':0, 'g':3, 't':2, '-':2},
      'g':{'a':2, 'c':3, 'g':0, 't':1, '-':3},
      't':{'a':1, 'c':2, 'g':1, 't':0, '-':1},
-     '-':{'a':1, 'c':2, 'g':3, 't':1, '-':99},
+     '-':{'a':1, 'c':2, 'g':3, 't':1, '-':99}
      }
 def dist(par, ch):
+
     if par.i == ch.i:
         h = '-'
     else:
-        h = par.s1[par.i]
+        if par.i<len(par.s1):
+            h = par.s1[par.i]
+        else:
+            h = '-'
     if par.j == ch.j:
         k = '-'
     else:
-        k = par.s2[par.j]
+        if par.j<len(par.s2):
+            k = par.s2[par.j]
+        else:
+            k = '-'
     return S[h][k]
 
 # see http://it.wikipedia.org/wiki/A*#Pseudo_Codice
 def a_star(s1, s2):
     """ find optimum alignment using A* """
-    print s1,s2
     closed_set, open_set = set(), set()
     g_score, h_score, f_score = {}, {}, {}
     start_node = Node(0, 0, s1, s2)
@@ -99,37 +108,56 @@ def a_star(s1, s2):
     g_score[start_node] = 0
     h_score[start_node] = start_node.estimate_dist_goal()
     f_score[start_node] = h_score[start_node]
-
+    
     while open_set:
         x = min(open_set, key=f_score.get)
-        print x.i,x.j
-        print 'open',open_set
-        print 'closed',closed_set
-        if not x.ends_align():
-            open_set.remove(x)
-            closed_set.add(x)
-
-        # goal if only one open remains, should end the alignment
-        if len(open_set) == 1:
-            last = open_set.pop()
-            if last.ends_align():
-                # optimum alignment found!!!
-                return last.reconstruct_path()
-
+        
+        print "\n\n\ncurrent node: ",x
+        print "i: "+str(x.i),"j:"+str(x.j)
+        print "----------------------"
+        print "open_set: ", open_set
+        print "closed_set: ",closed_set
+        print "----------------------"
+        
+        #remove/add lowest cost node from open_set/closed_set and use it as current node
+        open_set.remove(x)
+        closed_set.add(x)
+        
+        print "open_set: ", open_set
+        print "closed_set: ",closed_set        
+        print "----------------------"
+        
+        print "Currently processing %d nodes. len(OPEN_SET)=%d. len(CLOSED_SET)=%d" %((len(open_set)+len(closed_set)),len(open_set),len(closed_set))
+        
+        #goal test
+        if x.ends_align():
+            print "GOAL!!"
+            print "Substitution cost: %d" %(g_score[x])
+            return x.reconstruct_path()
+        
+        
+        
+        #expand his child nodes and pushes them into open_set
         for y in x.childs():
+            #we need to check if child node has previously been tested
+            #because we are expanding a graph instead of a tree
+            print "Y, Child of X: ",y
             if y in closed_set:
                 continue
-
+            
             # posso fare x - y TODO
             y_g_score = g_score[x] + dist(x, y)
             if y not in open_set:
+                print y, " wasn't in open_set. I add it."
                 open_set.add(y)
                 y_better = True
 
             elif y_g_score < g_score[y]:
+                print y, " was in open_set. This new is better than old node."
                 y_better = True
 
             else:
+                print y, " is worst. This child will be ignored."
                 y_better = False
 
             if y_better:
@@ -137,32 +165,51 @@ def a_star(s1, s2):
                 g_score[y] = y_g_score
                 h_score[y] = y.estimate_dist_goal()
                 f_score[y] = g_score[y] + h_score[y]
-
-            #else:
-            # TODO:remove y from x's childs?
-
+                print "g_score[y]: ",g_score[y]
+                print "h_score[y]: ",h_score[y]
+                print "f_score[y]: ",f_score[y]
+                
+        #sys.stdin.read(1)
+        
+        
     # impossibile?????
     raise Exception('Failure')
-
+    
 def prepare_strings(s1, s2):
     # longest string always s1
     if len(s2) > len(s1):
         s1, s2 = s2, s1
 
     # pad the shortest string
-    for i in range(len(s1)-len(s2)):
-        s2 += '-'
+    #for i in range(len(s1)-len(s2)):
+    #    s2 += '-'
     
     # add trailing gap to easy recognise ends of alignment
-    s1 += '-'
-    s2 += '-'
+    #s1 += '-'
+    #s2 += '-'
 
     return s1.lower(), s2.lower()
 
-s1 = 'tccg'
-s2 = 'ta'
+s1 = 'tccgaatagctagctacgggggggtagctacgtagcatgctacatcgatg'
+s2 = 'tagtatcgatctatatctcta'
+#s1 = 'ac'
+#s2 = 'c'
 
 if __name__=='__main__':
-
-    a_star(*prepare_strings(s1, s2))
-
+    o = a_star(*prepare_strings(s1, s2))
+    ns1=''
+    ns2=''
+    for i in range(0,len(o)-1):
+        if o[i].i == o[i+1].i:
+            ns1+='-'
+        else:
+            ns1+=s1[o[i].i]
+        if o[i].j == o[i+1].j:
+            ns2+='-'
+        else:
+            ns2+=s2[o[i].j]
+    print s1
+    print s2
+    print "-------"
+    print ns1
+    print ns2
