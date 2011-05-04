@@ -3,7 +3,10 @@
 """
 Implementation of sequence alignment using A*
 """
+
 import sys
+
+
 class Node(object):
     def __init__(self, i, j, s1, s2, parent=None):
         # indexes of the 2 chars identifying the node
@@ -41,7 +44,7 @@ class Node(object):
             dist += s2_n_chars - self.j - 1
         #return dist
         return 0
-        
+
     def childs(self):
         """ return list of child nodes, build them if necessary """
         self.sub_before = Node(self.i, self.j+1, self.s1, self.s2)
@@ -80,8 +83,8 @@ S = {'a':{'a':0, 'c':1, 'g':2, 't':1, '-':1},
      't':{'a':1, 'c':2, 'g':1, 't':0, '-':1},
      '-':{'a':1, 'c':2, 'g':3, 't':1, '-':99}
      }
-def dist(par, ch):
 
+def dist(par, ch):
     if par.i == ch.i:
         h = '-'
     else:
@@ -109,34 +112,34 @@ def a_star(s1, s2):
     g_score[start_node] = 0
     h_score[start_node] = start_node.estimate_dist_goal()
     f_score[start_node] = h_score[start_node]
-    
+
     while open_set:
         x = min(open_set, key=f_score.get)
-        
+
         print    "\n\n\ncurrent node: ",x
         print    "i: "+str(x.i),"j:"+str(x.j)
         print    "----------------------"
         print    "open_set: ", open_set
         print    "closed_set: ",closed_set
         print    "----------------------"
-        
+
         #remove/add lowest cost node from open_set/closed_set and use it as current node
         open_set.remove(x)
         closed_set.add(x)
-        
+
         print    "open_set: ", open_set
-        print    "closed_set: ",closed_set        
+        print    "closed_set: ",closed_set
         print    "----------------------"
-        
+
         print "Currently processing %d total nodes. len(OPEN_SET)=%d. len(CLOSED_SET)=%d" %((len(open_set)+len(closed_set)),len(open_set),len(closed_set))
-        
+
         #goal test
         if x.ends_align():
             print "\nSUBSTITUTION COST: %d" %(g_score[x])
             return x.reconstruct_path()
-        
-        
-        
+
+
+
         #expand his child nodes and pushes them into open_set
         for y in x.childs():
             #we need to check if child node has previously been tested
@@ -144,7 +147,7 @@ def a_star(s1, s2):
             print    "Y, Child of X: ",y
             if y in closed_set:
                 continue
-            
+
             # posso fare x - y TODO
             y_g_score = g_score[x] + dist(x, y)
             if y not in open_set:
@@ -168,13 +171,13 @@ def a_star(s1, s2):
                 print    "g_score[y]: ",g_score[y]
                 print    "h_score[y]: ",h_score[y]
                 print    "f_score[y]: ",f_score[y]
-                
+
         #sys.stdin.read(1)
-        
-        
+
+
     # impossibile?????
     raise Exception('Failure')
-    
+
 def prepare_strings(s1, s2):
     # longest string always s1
     if len(s2) > len(s1):
@@ -183,7 +186,7 @@ def prepare_strings(s1, s2):
     # pad the shortest string
     #for i in range(len(s1)-len(s2)):
     #    s2 += '-'
-    
+
     # add trailing gap to easy recognise ends of alignment
     #s1 += '-'
     #s2 += '-'
@@ -211,7 +214,7 @@ if __name__=='__main__':
             ns2+='-'
         else:
             ns2+=o[i].s2[o[i].j]
-    print "-----------------"        
+    print "-----------------"
     print "END OF ALIGNMENT:"
     print "-----------------"
     print o[0].s1
@@ -220,4 +223,4 @@ if __name__=='__main__':
     print ns1
     print ns2
     print "-----------------"
-            
+
