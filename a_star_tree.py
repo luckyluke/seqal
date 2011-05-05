@@ -5,6 +5,7 @@ Implementation of sequence alignment using A*
 """
 
 import sys
+import optparse
 
 
 class Node(object):
@@ -193,16 +194,11 @@ def prepare_strings(s1, s2):
 
     return s1.lower(), s2.lower()
 
-s1 = 'tagaaa'
-s2 = 'aaaa'
-#s1 = 'cagata'
-#s2 = 'taggata'
-
-if __name__=='__main__':
-    print "-----------------"
-    print "ALIGNMENT  BEGIN:"
-    print "-----------------"
-    o = a_star(*prepare_strings(s1, s2))
+def print_path(o):
+    """
+    Print the strings as a result of the alignment corresponding
+    to the path from a node to the root
+    """
     ns1=''
     ns2=''
     for i in range(0,len(o)-1):
@@ -215,12 +211,30 @@ if __name__=='__main__':
         else:
             ns2+=o[i].s2[o[i].j]
     print "-----------------"
-    print "END OF ALIGNMENT:"
-    print "-----------------"
     print o[0].s1
     print o[0].s2
     print "-----------------"
     print ns1
     print ns2
     print "-----------------"
+
+s1 = 'tagaaa'
+s2 = 'aaaa'
+#s1 = 'cagata'
+#s2 = 'taggata'
+
+if __name__=='__main__':
+    parser = optparse.OptionParser()
+    options, args = parser.parse_args()
+    if len(args) == 2:
+        s1, s2 = args
+
+    print "-----------------"
+    print "ALIGNMENT  BEGIN:"
+    print "-----------------"
+    o = a_star(*prepare_strings(s1, s2))
+    print "-----------------"
+    print "END OF ALIGNMENT:"
+    print "-----------------"
+    print_path(o)
 
