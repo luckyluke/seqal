@@ -18,7 +18,7 @@ class Node(object):
         self.sub_keep = None
         # node reached inserting a gap on the 2 string
         self.sub_after = None
-
+        
     def ends_align(self):
         """ Return True if the node is the last one for an alignment """
         #return self.s1[self.i] == '-' and self.s2[self.j] == '-'
@@ -45,9 +45,16 @@ class Node(object):
     def childs(self):
         """ return list of child nodes, build them if necessary """
         self.sub_before = Node(self.i, self.j+1, self.s1, self.s2)
+        #self.sub_before.cost=dist(self,self.sub_before)
         self.sub_keep = Node(self.i+1, self.j+1, self.s1, self.s2)
+        #self.sub_keep.cost=dist(self,self.sub_keep)
         self.sub_after = Node(self.i+1, self.j, self.s1, self.s2)
-        return [self.sub_before, self.sub_keep, self.sub_after]
+        #self.sub_after.cost=dist(self,self.sub_after)
+
+        if self.ends_align():
+            return []
+        else:
+            return [self.sub_before, self.sub_keep, self.sub_after]
 
     def reconstruct_path(self):
         if self.parent:
@@ -56,13 +63,22 @@ class Node(object):
             return p
         else:
             p=[]
-            p.append(Node(0, 0, self.s1, self.s2))
+            p.append(self)
             return p
 
     def __str__(self):
         #return '%d %d %s' %(self.i, self.j, hash(self))
-        return '%d %d %d' %(self.i, self.j, self.estimate_dist_goal())
+        #return '%d %d %d' %(self.i, self.j, self.estimate_dist_goal())
+        #return '(%d,%d)' %(self.i, self.j)
         #return '%d %d b(%s) k(%s) a(%s)' %(self.i, self.j, self.sub_before, self.sub_keep, self.sub_after)
+        if self.i<len(self.s1) and self.j<len(self.s2):
+            return '(%s[%d],%s[%d])' %(self.s1[self.i],self.i,self.s2[self.j],self.j)
+        elif self.i<len(self.s1) and self.j>=len(self.s2):
+            return '(%s[%d],-[%d])' %(self.s1[self.i],self.i,self.j)
+        elif self.i>=len(self.s1) and self.j<len(self.s2):
+            return '(-[%d],%s[%d])' %(self.i,self.s2[self.j],self.j)        
+        else:
+            return '(-[%d],-[%d])' %(self.i,self.j)
     __repr__ = __str__
 
     # methods needed to be meaningful elements of sets
@@ -75,8 +91,8 @@ class Node(object):
 
 # cost matrix
 S = {'a':{'a':0, 'c':1, 'g':2, 't':1, '-':1},
-     'c':{'a':1, 'c':0, 'g':3, 't':2, '-':2},
-     'g':{'a':2, 'c':3, 'g':0, 't':1, '-':3},
+     'c':{'a':1, 'c':0, 'g':15, 't':2, '-':2},
+     'g':{'a':2, 'c':15, 'g':0, 't':1, '-':3},
      't':{'a':1, 'c':2, 'g':1, 't':0, '-':1},
      '-':{'a':1, 'c':2, 'g':3, 't':1, '-':99}
      }
@@ -113,18 +129,20 @@ def a_star(s1, s2):
     while open_set:
         x = min(open_set, key=f_score.get)
         
-        print    "\n\n\ncurrent node: ",x
-        print    "i: "+str(x.i),"j:"+str(x.j)
-        print    "----------------------"
+        print    "\n\n----------------------"
         print    "open_set: ", open_set
         print    "closed_set: ",closed_set
         print    "----------------------"
-        
+        print    "current node: ",x
+        print    "i: "+str(x.i),"j:"+str(x.j)
+        print    "----------------------"
+
         #remove/add lowest cost node from open_set/closed_set and use it as current node
         open_set.remove(x)
         closed_set.add(x)
         
         print    "open_set: ", open_set
+        print    "----------------------"
         print    "closed_set: ",closed_set        
         print    "----------------------"
         
@@ -132,7 +150,7 @@ def a_star(s1, s2):
         
         #goal test
         if x.ends_align():
-            print "\nSUBSTITUTION COST: %d" %(g_score[x])
+            print "\n\nGOAL NODE!\n\nSUBSTITUTION COST: %d" %(g_score[x])
             return x.reconstruct_path()
         
         
@@ -141,12 +159,12 @@ def a_star(s1, s2):
         for y in x.childs():
             #we need to check if child node has previously been tested
             #because we are expanding a graph instead of a tree
-            print    "Y, Child of X: ",y
+            y_g_score = g_score[x] + dist(x, y)
+            print    "\n%s ---> %s" %(x,y)
             if y in closed_set:
+                print    y, " was in closed_set. This child will be ignored."
                 continue
             
-            # posso fare x - y TODO
-            y_g_score = g_score[x] + dist(x, y)
             if y not in open_set:
                 print    y, " wasn't in open_set. I add it."
                 open_set.add(y)
@@ -159,16 +177,20 @@ def a_star(s1, s2):
             else:
                 print    y, " is worst. This child will be ignored."
                 y_better = False
-
+                
             if y_better:
                 y.parent = x
                 g_score[y] = y_g_score
                 h_score[y] = y.estimate_dist_goal()
                 f_score[y] = g_score[y] + h_score[y]
-                print    "g_score[y]: ",g_score[y]
+                print    "\ng_score[y]: ",g_score[y]
                 print    "h_score[y]: ",h_score[y]
                 print    "f_score[y]: ",f_score[y]
-                
+            else:
+                print    "\ng_score[y]: ",y_g_score
+                print    "h_score[y]: ",y.estimate_dist_goal()
+                print    "f_score[y]: ",y_g_score+y.estimate_dist_goal()
+
         #sys.stdin.read(1)
         
         
@@ -190,10 +212,12 @@ def prepare_strings(s1, s2):
 
     return s1.lower(), s2.lower()
 
-s1 = 'tagaaa'
-s2 = 'aaaa'
+#s1 = 'cttagagcacggccgcccccgatatatat'
+#s2 = 'gccccaagagaggccccgatatgcgatat'
 #s1 = 'cagata'
 #s2 = 'taggata'
+s1="g"
+s2="c"
 
 if __name__=='__main__':
     print "-----------------"
@@ -211,7 +235,7 @@ if __name__=='__main__':
             ns2+='-'
         else:
             ns2+=o[i].s2[o[i].j]
-    print "-----------------"        
+    print "\n-----------------"        
     print "END OF ALIGNMENT:"
     print "-----------------"
     print o[0].s1
@@ -220,4 +244,4 @@ if __name__=='__main__':
     print ns1
     print ns2
     print "-----------------"
-            
+    print o
