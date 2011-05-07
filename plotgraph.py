@@ -10,6 +10,13 @@ from pygraph.readwrite.dot import write
 
 import gv
 
+S = {'a':{'a':0, 'c':1, 'g':2, 't':1, '-':1},
+     'c':{'a':1, 'c':0, 'g':3, 't':2, '-':2},
+     'g':{'a':2, 'c':3, 'g':0, 't':1, '-':3},
+     't':{'a':1, 'c':2, 'g':1, 't':0, '-':1},
+     '-':{'a':1, 'c':2, 'g':3, 't':1, '-':99}
+     }
+
 class GNode(object):
     def __init__(self, i, ch_i, j, ch_j):
         self.i, self.j = i, j
@@ -45,6 +52,20 @@ def print_align(steps):
     print s1
     print s2
 
+def weight_step(par, chl):
+    # verify that par is the parent and chl the child
+    if par.i > chl.i or par.j > chl.j:
+        par, chl = chl, par
+    if par.i == chl.i:
+        h = '-'
+    else:
+        h = par.ch_i
+    if par.j == chl.j:
+        k = '-'
+    else:
+        k = par.ch_j
+    return S[h][k]
+
 if __name__=='__main__':
     parser = optparse.OptionParser()
     options, args = parser.parse_args()
@@ -63,13 +84,16 @@ if __name__=='__main__':
     while len(s2) <= tot_len:
         s2 += '-'
 
+    # build all nodes
+    gr = digraph()
     nodes = [[None]*len(s2) for k in range(len(s1))]
-    nodes_all = []
     for i, chi in enumerate(s1):
         for j, chj in enumerate(s2):
-            node = GNode(i, chi, j, chj)
-            nodes[i][j] = node
-            nodes_all.append(node)
+            #if (i <= len(s1) or j <= len(s2))\
+            #        and abs(i-j) < min(i, j):
+                node = GNode(i, chi, j, chj)
+                nodes[i][j] = node
+                gr.add_node(node)
 
     ## percorso tutto in alto
     #steps = [nodes[0][0], nodes[1][0], nodes[2][0], nodes[3][0], nodes[4][0], nodes[5][1], nodes[5][2]]
@@ -83,28 +107,29 @@ if __name__=='__main__':
     #steps = [nodes[0][0], nodes[1][0], nodes[2][1], nodes[3][1], nodes[4][2]]
     #print_align(steps)
 
-    gr = digraph()
-    gr.add_nodes(nodes_all)
-    for n in nodes_all:
-        print n
+    # add the links between the nodes
+    for n in gr.nodes():
         #if n.i <= len(s1.replace('-', '')) and n.j <= len(s2.replace('-', '')):
         do_keep_i, do_keep_j = False, False
         if n.i < (len(s1)-1) and n.j < len(s2):
             do_keep_i = True
             next_before = nodes[n.i+1][n.j]
-            gr.add_edge((n, next_before))
+            gr.add_edge((n, next_before), wt=weight_step(n, next_before))
             #print 'nb',next_before
 
         if n.i < len(s1) and n.j < (len(s2)-1):
             do_keep_j = True
             next_after = nodes[n.i][n.j+1]
-            gr.add_edge((n, next_after))
+            gr.add_edge((n, next_after), wt=weight_step(n, next_after))
             #print 'na',next_after
 
         if do_keep_i and do_keep_j:
             next_keep = nodes[n.i+1][n.j+1]
-            gr.add_edge((n, next_keep))
+            gr.add_edge((n, next_keep), wt=weight_step(n, next_keep))
             #print 'nk',next_keep
+
+    #gr.parents = gr.incidents
+    #gr.childs = gr.neighbors
 
     dot = write(gr)
     grv = gv.readstring(dot)
