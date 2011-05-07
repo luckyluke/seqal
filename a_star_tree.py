@@ -22,7 +22,8 @@ class Node(object):
     def ends_align(self):
         """ Return True if the node is the last one for an alignment """
         #return self.s1[self.i] == '-' and self.s2[self.j] == '-'
-        return (self.i==len(self.s1) and self.j==len(self.s2))
+        return (self.i>=len(self.s1) and self.j>=len(self.s2))
+        #return (self.i==len(self.s1) and self.j==len(self.s2))
         #return False
 
     def estimate_dist_goal(self):
@@ -39,8 +40,10 @@ class Node(object):
             dist += s1_n_chars - self.i - 1
         if self.j < s2_n_chars:
             dist += s2_n_chars - self.j - 1
-        #return dist
-        return 0
+        return dist
+        #return 0
+        #return 99*(s1_n_chars+s2_n_chars-self.i-self.j)
+        
         
     def childs(self):
         """ return list of child nodes, build them if necessary """
@@ -68,17 +71,17 @@ class Node(object):
 
     def __str__(self):
         #return '%d %d %s' %(self.i, self.j, hash(self))
-        #return '%d %d %d' %(self.i, self.j, self.estimate_dist_goal())
+        return '%d %d %d' %(self.i, self.j, self.estimate_dist_goal())
         #return '(%d,%d)' %(self.i, self.j)
         #return '%d %d b(%s) k(%s) a(%s)' %(self.i, self.j, self.sub_before, self.sub_keep, self.sub_after)
-        if self.i<len(self.s1) and self.j<len(self.s2):
-            return '(%s[%d],%s[%d])' %(self.s1[self.i],self.i,self.s2[self.j],self.j)
-        elif self.i<len(self.s1) and self.j>=len(self.s2):
-            return '(%s[%d],-[%d])' %(self.s1[self.i],self.i,self.j)
-        elif self.i>=len(self.s1) and self.j<len(self.s2):
-            return '(-[%d],%s[%d])' %(self.i,self.s2[self.j],self.j)        
-        else:
-            return '(-[%d],-[%d])' %(self.i,self.j)
+        #if self.i<len(self.s1) and self.j<len(self.s2):
+        #    return '(%s[%d],%s[%d])' %(self.s1[self.i],self.i,self.s2[self.j],self.j)
+        #elif self.i<len(self.s1) and self.j>=len(self.s2):
+        #    return '(%s[%d],-[%d])' %(self.s1[self.i],self.i,self.j)
+        #elif self.i>=len(self.s1) and self.j<len(self.s2):
+        #    return '(-[%d],%s[%d])' %(self.i,self.s2[self.j],self.j)        
+        #else:
+        #    return '(-[%d],-[%d])' %(self.i,self.j)
     __repr__ = __str__
 
     # methods needed to be meaningful elements of sets
@@ -91,10 +94,10 @@ class Node(object):
 
 # cost matrix
 S = {'a':{'a':0, 'c':1, 'g':2, 't':1, '-':1},
-     'c':{'a':1, 'c':0, 'g':15, 't':2, '-':2},
-     'g':{'a':2, 'c':15, 'g':0, 't':1, '-':3},
-     't':{'a':1, 'c':2, 'g':1, 't':0, '-':1},
-     '-':{'a':1, 'c':2, 'g':3, 't':1, '-':99}
+     'c':{'a':1, 'c':0, 'g':15,'t':1, '-':2},
+     'g':{'a':2, 'c':15,'g':0, 't':1, '-':1},
+     't':{'a':1, 'c':1, 'g':1, 't':0, '-':1},
+     '-':{'a':1, 'c':2, 'g':1, 't':1, '-':99}
      }
 def dist(par, ch):
 
@@ -131,10 +134,13 @@ def a_star(s1, s2):
         
         print    "\n\n----------------------"
         print    "open_set: ", open_set
+        print    "----------------------"
         print    "closed_set: ",closed_set
         print    "----------------------"
         print    "current node: ",x
-        print    "i: "+str(x.i),"j:"+str(x.j)
+        print    "g_score[y]: ",g_score[x]
+        print    "h_score[y]: ",h_score[x]
+        print    "f_score[y]: ",f_score[x]
         print    "----------------------"
 
         #remove/add lowest cost node from open_set/closed_set and use it as current node
@@ -170,7 +176,7 @@ def a_star(s1, s2):
                 open_set.add(y)
                 y_better = True
 
-            elif y_g_score < g_score[y]:
+            elif y_g_score <= g_score[y]:
                 print    y, " was in open_set. This new is better than old node."
                 y_better = True
 
@@ -179,7 +185,12 @@ def a_star(s1, s2):
                 y_better = False
                 
             if y_better:
+                print "vecchio padre"
+                print y.parent
                 y.parent = x
+                print "ho aggiornato il padreeeeeee!!"
+                print x
+                print y.parent
                 g_score[y] = y_g_score
                 h_score[y] = y.estimate_dist_goal()
                 f_score[y] = g_score[y] + h_score[y]
@@ -214,10 +225,10 @@ def prepare_strings(s1, s2):
 
 #s1 = 'cttagagcacggccgcccccgatatatat'
 #s2 = 'gccccaagagaggccccgatatgcgatat'
-#s1 = 'cagata'
-#s2 = 'taggata'
-s1="g"
-s2="c"
+s1 = 'cagata'
+s2 = 'taggata'
+#s1="g"
+#s2="c"
 
 if __name__=='__main__':
     print "-----------------"
@@ -230,11 +241,17 @@ if __name__=='__main__':
         if o[i].i == o[i+1].i:
             ns1+='-'
         else:
-            ns1+=o[i].s1[o[i].i]
+            if o[i].i<len(o[i].s1):
+                ns1+=o[i].s1[o[i].i]
+            else:
+                ns1+='-'
         if o[i].j == o[i+1].j:
             ns2+='-'
         else:
-            ns2+=o[i].s2[o[i].j]
+            if o[i].j<len(o[i].s2):
+                ns2+=o[i].s2[o[i].j]
+            else:
+                ns2+='-'
     print "\n-----------------"        
     print "END OF ALIGNMENT:"
     print "-----------------"
@@ -244,4 +261,4 @@ if __name__=='__main__':
     print ns1
     print ns2
     print "-----------------"
-    print o
+
