@@ -86,19 +86,22 @@ if __name__=='__main__':
 
     # useful for test on the whole graph
     tot_len = len(s1)+len(s2)
-    while len(s1) <= tot_len:
-        s1 += '-'
-    while len(s2) <= tot_len:
-        s2 += '-'
+    s1_pad, s2_pad = s1[:], s2[:]
+    while len(s1_pad) <= tot_len:
+        s1_pad += '-'
+    while len(s2_pad) <= tot_len:
+        s2_pad += '-'
 
     # build all nodes
     gr = Graph()
-    for i, chi in enumerate(s1):
-        for j, chj in enumerate(s2):
-            #if (i <= len(s1) or j <= len(s2))\
-            #        and abs(i-j) < min(i, j):
-                node = GNode(i, chi, j, chj)
-                gr.add_node(node)
+    for i, chi in enumerate(s1_pad):
+        for j, chj in enumerate(s2_pad):
+            # if we're out of both strings length we are comparing two gaps
+            if (i <= len(s1) or j <= len(s2)):
+                # can't have more than len(s1) gaps in s2 and vice versa
+                if ((i >= j) and ((i-j) <= len(s1))) or ((i <= j) and ((j - i) <= len(s2))):
+                    node = GNode(i, chi, j, chj)
+                    gr.add_node(node)
 
     ## percorso tutto in alto
     #steps = [nodes[0][0], nodes[1][0], nodes[2][0], nodes[3][0], nodes[4][0], nodes[5][1], nodes[5][2]]
@@ -114,24 +117,25 @@ if __name__=='__main__':
 
     # add the links between the nodes
     for n in gr.nodes():
-        #if n.i <= len(s1.replace('-', '')) and n.j <= len(s2.replace('-', '')):
-        do_keep_i, do_keep_j = False, False
-        if n.i < (len(s1)-1) and n.j < len(s2):
-            do_keep_i = True
-            next_before = gr.get_node(n.i+1, n.j)
-            gr.add_edge((n, next_before), wt=weight_step(n, next_before))
-            #print 'nb',next_before
+        for h, k in [(n.i+1, n.j), (n.i+1, n.j+1), (n.i, n.j+1)]:
+            try:
+                nn = gr.get_node(h, k)
+                if (n.i >= len(s1) and (nn.i==n.i+1 and nn.j==n.j+1))\
+                        or (n.j >= len(s2) and (nn.i==n.i+1 and nn.j==n.j+1)):
+                    # if we're comparing a gap, there is only one way to go
+                    add_edge = True
+                elif (n.i < len(s1) and n.j < len(s2)):
+                    # if we compare two chars every direction is possible
+                    add_edge = True
+                else:
+                    add_edge = False
 
-        if n.i < len(s1) and n.j < (len(s2)-1):
-            do_keep_j = True
-            next_after = gr.get_node(n.i, n.j+1)
-            gr.add_edge((n, next_after), wt=weight_step(n, next_after))
-            #print 'na',next_after
-
-        if do_keep_i and do_keep_j:
-            next_keep = gr.get_node(n.i+1, n.j+1)
-            gr.add_edge((n, next_keep), wt=weight_step(n, next_keep))
-            #print 'nk',next_keep
+                if add_edge:
+                    wt = weight_step(n, nn)
+                    gr.add_edge((n, nn), wt=wt)
+                    print 'Added link from %s to %s, wt %d' %(n, nn, wt)
+            except KeyError, e:
+                pass
 
     #gr.parents = gr.incidents
     #gr.childs = gr.neighbors
