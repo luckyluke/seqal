@@ -6,6 +6,7 @@ import optparse
 #from pygraph.classes.graph import graph
 from pygraph.classes.digraph import digraph
 #from pygraph.algorithms.searching import breadth_first_search
+from pygraph.algorithms.minmax import heuristic_search, shortest_path
 from pygraph.readwrite.dot import write
 
 import gv
@@ -28,7 +29,7 @@ class GNode(object):
 
     def __hash__(self):
         # identify the node with the indexes of the chars in the 2 strings
-        return hash((self.i, self.j))
+        return hash((self.i, self.j, self.ch_i, self.ch_j))
 
     def __eq__(self, other):
         return hash(self) == hash(other)
@@ -136,7 +137,7 @@ if __name__=='__main__':
                 if add_edge:
                     wt = weight_step(n, nn)
                     gr.add_edge((n, nn), wt=wt)
-                    print 'Added link from %s to %s, wt %d' %(n, nn, wt)
+                    #print 'Added link from %s to %s, wt %d' %(n, nn, wt)
 
     #gr.parents = gr.incidents
     #gr.childs = gr.neighbors
@@ -145,4 +146,23 @@ if __name__=='__main__':
     grv = gv.readstring(dot)
     gv.layout(grv, 'dot')
     gv.render(grv, 'svg', 'graph.svg')
+
+    # add fake end node
+    end_node = GNode(-1, 'end', -1, 'end')
+    gr.add_node(end_node)
+    real_end_nodes = [n for n in gr.nodes() if len(gr.neighbors(n))==0]
+    for n in real_end_nodes:
+        gr.add_edge((n, end_node), wt=0)
+
+    # use A* without considering heuristic, which degenerates into a dijkstra
+    opt = heuristic_search(gr, gr.get_node(0, 0), end_node, lambda s, e:0)
+    print_align(opt)
+
+    # get all shortest paths
+    #paths, costs = shortest_path(gr, gr.get_node(0, 0))
+    ## get all possible end nodes
+    #end_nodes = [n for n in gr.nodes() if len(gr.neighbors(n))==0]
+    #best_end =  min(end_nodes, key=costs.get)
+    #print 'Best alignment: %s' %paths[best_end]
+    #print 'Cost: %d' %costs[best_end]
 
