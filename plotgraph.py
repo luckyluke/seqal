@@ -120,9 +120,12 @@ if __name__=='__main__':
         for h, k in [(n.i+1, n.j), (n.i+1, n.j+1), (n.i, n.j+1)]:
             try:
                 nn = gr.get_node(h, k)
+            except KeyError, e:
+                pass
+            else:
+                # if we're comparing a gap, there is only one way to go
                 if (n.i >= len(s1) and (nn.i==n.i+1 and nn.j==n.j+1))\
                         or (n.j >= len(s2) and (nn.i==n.i+1 and nn.j==n.j+1)):
-                    # if we're comparing a gap, there is only one way to go
                     add_edge = True
                 elif (n.i < len(s1) and n.j < len(s2)):
                     # if we compare two chars every direction is possible
@@ -134,8 +137,6 @@ if __name__=='__main__':
                     wt = weight_step(n, nn)
                     gr.add_edge((n, nn), wt=wt)
                     print 'Added link from %s to %s, wt %d' %(n, nn, wt)
-            except KeyError, e:
-                pass
 
     #gr.parents = gr.incidents
     #gr.childs = gr.neighbors
