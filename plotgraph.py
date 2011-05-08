@@ -41,6 +41,55 @@ class Graph(digraph):
                 return n
         raise KeyError('Node (%d %d) not found!' %(i, j))
 
+
+def build_graph(s1, s2):
+    #gr.parents = gr.incidents
+    #gr.childs = gr.neighbors
+
+    # useful for test on the whole graph
+    tot_len = len(s1)+len(s2)
+    s1_pad, s2_pad = s1[:], s2[:]
+    while len(s1_pad) <= tot_len:
+        s1_pad += '-'
+    while len(s2_pad) <= tot_len:
+        s2_pad += '-'
+
+    # build all nodes
+    gr = Graph()
+    for i, chi in enumerate(s1_pad):
+        for j, chj in enumerate(s2_pad):
+            # if we're out of both strings length we are comparing two gaps
+            if (i <= len(s1) or j <= len(s2)):
+                # can't have more than len(s1) gaps in s2 and vice versa
+                if ((i >= j) and ((i-j) <= len(s1))) or ((i <= j) and ((j - i) <= len(s2))):
+                    node = GNode(i, chi, j, chj)
+                    gr.add_node(node)
+
+    # add the links between the nodes
+    for n in gr.nodes():
+        for h, k in [(n.i+1, n.j), (n.i+1, n.j+1), (n.i, n.j+1)]:
+            try:
+                nn = gr.get_node(h, k)
+            except KeyError, e:
+                pass
+            else:
+                # if we're comparing a gap, there is only one way to go
+                if (n.i >= len(s1) and (nn.i==n.i+1 and nn.j==n.j+1))\
+                        or (n.j >= len(s2) and (nn.i==n.i+1 and nn.j==n.j+1)):
+                    add_edge = True
+                elif (n.i < len(s1) and n.j < len(s2)):
+                    # if we compare two chars every direction is possible
+                    add_edge = True
+                else:
+                    add_edge = False
+
+                if add_edge:
+                    wt = weight_step(n, nn)
+                    gr.add_edge((n, nn), wt=wt)
+                    #print 'Added link from %s to %s, wt %d' %(n, nn, wt)
+
+    return gr
+
 def print_align(steps):
     s1, s2 = '', ''
     for i, step in enumerate(steps):
@@ -56,7 +105,9 @@ def print_align(steps):
                 s1 += '-'
                 s2 += step.ch_j
             else:
-                print 'error:',step, next_step
+                # don't give error on the fake last node
+                if (next_step.i, next_step.j) != (-1, -1):
+                    print 'error:',step, next_step
     print s1
     print s2
 
@@ -85,63 +136,9 @@ if __name__=='__main__':
     if len(s1)<len(s2):
         s1, s2 = s2, s1
 
-    # useful for test on the whole graph
-    tot_len = len(s1)+len(s2)
-    s1_pad, s2_pad = s1[:], s2[:]
-    while len(s1_pad) <= tot_len:
-        s1_pad += '-'
-    while len(s2_pad) <= tot_len:
-        s2_pad += '-'
+    gr = build_graph(s1, s2)
 
-    # build all nodes
-    gr = Graph()
-    for i, chi in enumerate(s1_pad):
-        for j, chj in enumerate(s2_pad):
-            # if we're out of both strings length we are comparing two gaps
-            if (i <= len(s1) or j <= len(s2)):
-                # can't have more than len(s1) gaps in s2 and vice versa
-                if ((i >= j) and ((i-j) <= len(s1))) or ((i <= j) and ((j - i) <= len(s2))):
-                    node = GNode(i, chi, j, chj)
-                    gr.add_node(node)
-
-    ## percorso tutto in alto
-    #steps = [nodes[0][0], nodes[1][0], nodes[2][0], nodes[3][0], nodes[4][0], nodes[5][1], nodes[5][2]]
-    ## percorso tutto in basso
-    #steps = [nodes[0][0], nodes[0][1], nodes[0][2], nodes[1][3], nodes[2][3], nodes[3][4], nodes[4][4]]
-    ## percorso inferiore sul parall
-    #steps = [nodes[0][0], nodes[0][1], nodes[0][2], nodes[1][2], nodes[2][2], nodes[3][2], nodes[4][2]]
-    ## percorso superiore sul parall
-    #steps = [nodes[0][0], nodes[1][0], nodes[2][0], nodes[3][0], nodes[4][0], nodes[4][1], nodes[4][2]]
-
-    #steps = [nodes[0][0], nodes[1][0], nodes[2][1], nodes[3][1], nodes[4][2]]
-    #print_align(steps)
-
-    # add the links between the nodes
-    for n in gr.nodes():
-        for h, k in [(n.i+1, n.j), (n.i+1, n.j+1), (n.i, n.j+1)]:
-            try:
-                nn = gr.get_node(h, k)
-            except KeyError, e:
-                pass
-            else:
-                # if we're comparing a gap, there is only one way to go
-                if (n.i >= len(s1) and (nn.i==n.i+1 and nn.j==n.j+1))\
-                        or (n.j >= len(s2) and (nn.i==n.i+1 and nn.j==n.j+1)):
-                    add_edge = True
-                elif (n.i < len(s1) and n.j < len(s2)):
-                    # if we compare two chars every direction is possible
-                    add_edge = True
-                else:
-                    add_edge = False
-
-                if add_edge:
-                    wt = weight_step(n, nn)
-                    gr.add_edge((n, nn), wt=wt)
-                    #print 'Added link from %s to %s, wt %d' %(n, nn, wt)
-
-    #gr.parents = gr.incidents
-    #gr.childs = gr.neighbors
-
+    # print the graph
     dot = write(gr)
     grv = gv.readstring(dot)
     gv.layout(grv, 'dot')
@@ -159,6 +156,7 @@ if __name__=='__main__':
     print_align(opt)
 
     # get all shortest paths
+    # this dijkstra implementation finds ALL paths, which is not needed
     #paths, costs = shortest_path(gr, gr.get_node(0, 0))
     ## get all possible end nodes
     #end_nodes = [n for n in gr.nodes() if len(gr.neighbors(n))==0]
