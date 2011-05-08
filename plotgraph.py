@@ -3,9 +3,9 @@
 import sys
 import optparse
 
-from pygraph.classes.graph import graph
+#from pygraph.classes.graph import graph
 from pygraph.classes.digraph import digraph
-from pygraph.algorithms.searching import breadth_first_search
+#from pygraph.algorithms.searching import breadth_first_search
 from pygraph.readwrite.dot import write
 
 import gv
@@ -32,6 +32,13 @@ class GNode(object):
 
     def __eq__(self, other):
         return hash(self) == hash(other)
+
+class Graph(digraph):
+    def get_node(self, i, j):
+        for n in self.nodes():
+            if (n.i == i) and (n.j == j):
+                return n
+        raise KeyError('Node (%d %d) not found!' %(i, j))
 
 def print_align(steps):
     s1, s2 = '', ''
@@ -85,14 +92,12 @@ if __name__=='__main__':
         s2 += '-'
 
     # build all nodes
-    gr = digraph()
-    nodes = [[None]*len(s2) for k in range(len(s1))]
+    gr = Graph()
     for i, chi in enumerate(s1):
         for j, chj in enumerate(s2):
             #if (i <= len(s1) or j <= len(s2))\
             #        and abs(i-j) < min(i, j):
                 node = GNode(i, chi, j, chj)
-                nodes[i][j] = node
                 gr.add_node(node)
 
     ## percorso tutto in alto
@@ -113,18 +118,18 @@ if __name__=='__main__':
         do_keep_i, do_keep_j = False, False
         if n.i < (len(s1)-1) and n.j < len(s2):
             do_keep_i = True
-            next_before = nodes[n.i+1][n.j]
+            next_before = gr.get_node(n.i+1, n.j)
             gr.add_edge((n, next_before), wt=weight_step(n, next_before))
             #print 'nb',next_before
 
         if n.i < len(s1) and n.j < (len(s2)-1):
             do_keep_j = True
-            next_after = nodes[n.i][n.j+1]
+            next_after = gr.get_node(n.i, n.j+1)
             gr.add_edge((n, next_after), wt=weight_step(n, next_after))
             #print 'na',next_after
 
         if do_keep_i and do_keep_j:
-            next_keep = nodes[n.i+1][n.j+1]
+            next_keep = gr.get_node(n.i+1, n.j+1)
             gr.add_edge((n, next_keep), wt=weight_step(n, next_keep))
             #print 'nk',next_keep
 
