@@ -147,7 +147,8 @@ if __name__=='__main__':
     # add fake end node
     end_node = GNode(-1, 'end', -1, 'end')
     gr.add_node(end_node)
-    real_end_nodes = [n for n in gr.nodes() if len(gr.neighbors(n))==0]
+    #real_end_nodes = [n for n in gr.nodes() if len(gr.neighbors(n))==0]
+    real_end_nodes = [n for n in gr.nodes() if (n.i >= len(s1)) and (n.j >= len(s2))]
     for n in real_end_nodes:
         gr.add_edge((n, end_node), wt=0)
 
