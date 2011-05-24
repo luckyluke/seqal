@@ -28,27 +28,26 @@ if __name__=='__main__':
 
     gr = build_graph(s1, s2)
 
-    # add fake end node
-    end_node = GNode(-1, 'end', -1, 'end')
-    gr.add_node(end_node)
-    #real_end_nodes = [n for n in gr.nodes() if len(gr.neighbors(n))==0]
-    real_end_nodes = [n for n in gr.nodes() if (n.i >= len(s1)) and (n.j >= len(s2))]
-    for n in real_end_nodes:
-        gr.add_edge((n, end_node), wt=0)
+    ## add fake end node
+    end_node = add_end_node(gr, s1, s2)
 
     # use A* without considering heuristic, which degenerates into a dijkstra
     #opt = heuristic_search(gr, gr.get_node(0, 0), end_node, lambda s, e:0)
     print 'No heuristic (dijkstra)'
     opt = heuristic_search(gr, gr.get_node(0, 0), end_node, get_h('none'))
     print_align(opt)
+    print_cost(opt)
 
     print '\nString_correlation'
+    #opt = heuristic_search(gr, gr.get_node(0, 0), end_node, get_h('sc', s1, s2, cmp=True, gr=gr))
     opt = heuristic_search(gr, gr.get_node(0, 0), end_node, get_h('sc', s1, s2))
     print_align(opt)
+    print_cost(opt)
 
     print '\nMinimum residual cost'
     opt = heuristic_search(gr, gr.get_node(0, 0), end_node, get_h('mrc', s1, s2))
     print_align(opt)
+    print_cost(opt)
 
     #print '\nHeuristic: %s' %options.heuristic
     #opt = heuristic_search(gr, gr.get_node(0, 0), end_node, get_h(options.heuristic, s1, s2))

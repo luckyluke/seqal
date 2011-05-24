@@ -1,5 +1,7 @@
 
-from common_graph import S
+from pygraph.algorithms.minmax import heuristic_search
+
+from common_graph import *
 
 #
 # heuristic 1
@@ -51,6 +53,27 @@ def _scorr(s1, s2):
                 corr += 1
     return corr
 
+
+def _scorr2(s1, s2):
+    #corr = 0
+    corrs = []
+    # pad s1
+    tmps1 = '-'*len(s2)+s1[:]+'-'*len(s2)
+    for step in range(len(tmps1)-len(s2)):
+        tmps2 = '-'*step+s2[:]
+        corr = 0
+        # count only differing chars at every shift
+        for i, c in enumerate(tmps2):
+            #if c != '-' and c == tmps1[i]:
+            if c != tmps1[i]:
+                # cost?
+                corr += 1
+        corrs.append(corr)
+    if corrs:
+        return min(corrs)
+    else:
+        return 0
+
 def string_correlation(node, end, s1, s2):
     """
     compute a correlation between the residual strings,
@@ -64,7 +87,8 @@ def string_correlation(node, end, s1, s2):
     hs2 = s2[node.j:]
     cur = _scorr(hs1, hs2)
     #print node, hs1, hs2,  cur, ref
-    return cur/float(ref)
+    h = cur/float(ref)
+    return h
 
 #
 # utilities
@@ -76,7 +100,7 @@ hlist = {'mrc':minimum_residual_cost,
          'none':lambda n, e: 0
          }
 
-def get_h(name, *args):
+def get_h(name, *args, **kw):
     """
     build a function that can be used to compute the heuristic.
     The heuristic may need other parameters than the current node and the
@@ -84,6 +108,13 @@ def get_h(name, *args):
     """
     func = hlist[name]
     def h(node, end):
-        return func(node, end, *args)
+        h_cost = func(node, end, *args)
+        if kw.get('cmp', None):
+            # allow to compare an heuristic with the real distance
+            gr = kw.get('gr')
+            ret = heuristic_search(gr, node, end, hlist['none'])
+            print_cost(ret)
+            print 'Heuristic cost:', h_cost
+        return h_cost
     return h
 

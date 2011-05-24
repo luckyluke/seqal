@@ -9,7 +9,7 @@ from pygraph.classes.digraph import digraph
 #from pygraph.algorithms.minmax import heuristic_search, shortest_path
 #from pygraph.readwrite.dot import write
 
-__all__ = ['GNode', 'build_graph', 'print_align', 'S']
+__all__ = ['GNode', 'build_graph', 'print_align', 'print_cost',  'add_end_node', 'S']
 
 S = {'a':{'a':0, 'c':1, 'g':2, 't':1, '-':1},
      'c':{'a':1, 'c':0, 'g':3, 't':2, '-':2},
@@ -111,6 +111,29 @@ def print_align(steps):
     print s1
     print s2
 
+def print_cost(steps):
+    s1, s2 = '', ''
+    cost = 0
+    for i, step in enumerate(steps):
+        if i < (len(steps)-1):
+            next_step = steps[i+1]
+            if (step.i < next_step.i) and (step.j < next_step.j):
+                s1 += step.ch_i
+                s2 += step.ch_j
+            elif (step.i < next_step.i) and (step.j == next_step.j):
+                s1 += step.ch_i
+                s2 += '-'
+            elif (step.i == next_step.i) and (step.j < next_step.j):
+                s1 += '-'
+                s2 += step.ch_j
+            else:
+                # don't give error on the fake last node
+                if (next_step.i, next_step.j) != (-1, -1):
+                    print 'error:',step, next_step
+            if (next_step.i, next_step.j) != (-1, -1):
+                cost += S[s1[-1]][s2[-1]]
+    print 'Cost',cost
+
 def weight_step(par, chl):
     # verify that par is the parent and chl the child
     if par.i > chl.i or par.j > chl.j:
@@ -124,4 +147,13 @@ def weight_step(par, chl):
     else:
         k = par.ch_j
     return S[h][k]
+
+def add_end_node(gr, s1, s2):
+    end_node = GNode(-1, 'end', -1, 'end')
+    gr.add_node(end_node)
+    #real_end_nodes = [n for n in gr.nodes() if len(gr.neighbors(n))==0]
+    real_end_nodes = [n for n in gr.nodes() if (n.i >= len(s1)) and (n.j >= len(s2))]
+    for n in real_end_nodes:
+        gr.add_edge((n, end_node), wt=0)
+    return end_node
 
