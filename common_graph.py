@@ -9,7 +9,7 @@ from pygraph.classes.digraph import digraph
 #from pygraph.algorithms.minmax import heuristic_search, shortest_path
 #from pygraph.readwrite.dot import write
 
-__all__ = ['GNode', 'build_graph', 'print_align']
+__all__ = ['GNode', 'build_graph', 'print_align', 'S']
 
 S = {'a':{'a':0, 'c':1, 'g':2, 't':1, '-':1},
      'c':{'a':1, 'c':0, 'g':3, 't':2, '-':2},

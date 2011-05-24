@@ -10,9 +10,13 @@ from pygraph.algorithms.minmax import heuristic_search, shortest_path
 from pygraph.readwrite.dot import write
 
 from common_graph import *
+from heuristics import get_h, hlist
 
 if __name__=='__main__':
     parser = optparse.OptionParser()
+    parser.add_option('-H', '--heuristic',
+            help='Choose the heuristic to be used with A*.',
+            default='none', choices=hlist.keys())
     options, args = parser.parse_args()
     if len(args) < 2:
         parser.print_help()
@@ -33,8 +37,22 @@ if __name__=='__main__':
         gr.add_edge((n, end_node), wt=0)
 
     # use A* without considering heuristic, which degenerates into a dijkstra
-    opt = heuristic_search(gr, gr.get_node(0, 0), end_node, lambda s, e:0)
+    #opt = heuristic_search(gr, gr.get_node(0, 0), end_node, lambda s, e:0)
+    print 'No heuristic (dijkstra)'
+    opt = heuristic_search(gr, gr.get_node(0, 0), end_node, get_h('none'))
     print_align(opt)
+
+    print '\nString_correlation'
+    opt = heuristic_search(gr, gr.get_node(0, 0), end_node, get_h('sc', s1, s2))
+    print_align(opt)
+
+    print '\nMinimum residual cost'
+    opt = heuristic_search(gr, gr.get_node(0, 0), end_node, get_h('mrc', s1, s2))
+    print_align(opt)
+
+    #print '\nHeuristic: %s' %options.heuristic
+    #opt = heuristic_search(gr, gr.get_node(0, 0), end_node, get_h(options.heuristic, s1, s2))
+    #print_align(opt)
 
     # get all shortest paths
     # this dijkstra implementation finds ALL paths, which is not needed
