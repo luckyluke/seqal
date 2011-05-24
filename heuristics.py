@@ -113,8 +113,8 @@ def get_h(name, *args, **kw):
             # allow to compare an heuristic with the real distance
             gr = kw.get('gr')
             ret = heuristic_search(gr, node, end, hlist['none'])
-            print_cost(ret)
-            print 'Heuristic cost:', h_cost
+            real_cost = get_cost(ret)
+            print 'Heuristic cost:', h_cost, 'Real cost:',real_cost
         return h_cost
     return h
 

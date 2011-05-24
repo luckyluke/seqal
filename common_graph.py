@@ -9,7 +9,7 @@ from pygraph.classes.digraph import digraph
 #from pygraph.algorithms.minmax import heuristic_search, shortest_path
 #from pygraph.readwrite.dot import write
 
-__all__ = ['GNode', 'build_graph', 'print_align', 'print_cost',  'add_end_node', 'S']
+#__all__ = ['GNode', 'build_graph', 'print_align', 'print_cost',  'add_end_node', 'S']
 
 S = {'a':{'a':0, 'c':1, 'g':2, 't':1, '-':1},
      'c':{'a':1, 'c':0, 'g':3, 't':2, '-':2},
@@ -90,7 +90,7 @@ def build_graph(s1, s2):
 
     return gr
 
-def print_align(steps):
+def get_align(steps):
     s1, s2 = '', ''
     for i, step in enumerate(steps):
         if i < (len(steps)-1):
@@ -108,30 +108,22 @@ def print_align(steps):
                 # don't give error on the fake last node
                 if (next_step.i, next_step.j) != (-1, -1):
                     print 'error:',step, next_step
+    return s1, s2
+
+def print_align(steps):
+    s1, s2 = get_align(steps)
     print s1
     print s2
 
-def print_cost(steps):
-    s1, s2 = '', ''
+def get_cost(steps):
+    s1, s2 = get_align(steps)
     cost = 0
-    for i, step in enumerate(steps):
-        if i < (len(steps)-1):
-            next_step = steps[i+1]
-            if (step.i < next_step.i) and (step.j < next_step.j):
-                s1 += step.ch_i
-                s2 += step.ch_j
-            elif (step.i < next_step.i) and (step.j == next_step.j):
-                s1 += step.ch_i
-                s2 += '-'
-            elif (step.i == next_step.i) and (step.j < next_step.j):
-                s1 += '-'
-                s2 += step.ch_j
-            else:
-                # don't give error on the fake last node
-                if (next_step.i, next_step.j) != (-1, -1):
-                    print 'error:',step, next_step
-            if (next_step.i, next_step.j) != (-1, -1):
-                cost += S[s1[-1]][s2[-1]]
+    for c1, c2 in zip(s1, s2):
+        cost += S[c1][c2]
+    return cost
+
+def print_cost(steps):
+    cost = get_cost(steps)
     print 'Cost',cost
 
 def weight_step(par, chl):
