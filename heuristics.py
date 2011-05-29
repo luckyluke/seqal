@@ -14,6 +14,8 @@ def minimum_residual_cost(node, end, s1, s2):
     """
     if node == end:
         return 0
+    # caratteri da rimuovere, inizio prendendoli tutti e poi tolgo man mano
+    # i caratteri che compaiono nelle due sottostringhe
     chars = ['a', 'c', 'g', 't', '-']
     hs1 = s1[node.i:]
     hs2 = s2[node.j:]
@@ -121,6 +123,8 @@ def get_h(name, *args, **kw):
             ret = heuristic_search(gr, node, end, get_h('none', *args))
             real_cost = get_cost(ret)
             print node, 'Heuristic cost:', h_cost, 'Real cost:',real_cost
+            if h_cost > real_cost:
+                print 'BAD H'
         return h_cost
     return h
 
