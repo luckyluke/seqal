@@ -15,6 +15,7 @@ def minimum_residual_cost(node, end, s1, s2):
     chars = ['a', 'c', 'g', 't', '-']
     hs1 = s1[node.i:]
     hs2 = s2[node.j:]
+    hs1,hs2 = remove_dup_chars(hs1,hs2)
     hs = hs1[:]+hs2[:]
     for ch in hs:
         if ch in chars:
@@ -117,4 +118,12 @@ def get_h(name, *args, **kw):
             print 'Heuristic cost:', h_cost, 'Real cost:',real_cost
         return h_cost
     return h
+
+def remove_dup_chars(hs1,hs2):
+    for i,c in enumerate(hs1):
+        j=hs2.find(c)
+        if j!=-1:
+            hs1=hs1[:i]+hs1[i+1:]
+            hs2=hs2[:j]+hs2[j+1:]
+    return hs1,hs2
 
