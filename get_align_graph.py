@@ -27,7 +27,8 @@ if __name__=='__main__':
     if len(s1)<len(s2):
         s1, s2 = s2, s1
 
-    gr = build_graph(s1, s2)
+    #gr = build_graph(s1, s2)
+    gr = Graph(s1, s2)
 
     ## add fake end node
     end_node = add_end_node(gr, s1, s2)

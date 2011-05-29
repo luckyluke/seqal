@@ -24,7 +24,7 @@ class GNode(object):
         self.ch_i, self.ch_j = ch_i, ch_j
 
     def __str__(self):
-        return "(%d %d)" %(self.i, self.j)
+        return "(%d%s %d%s)" %(self.i, self.ch_i, self.j, self.ch_j)
     __repr__ = __str__
 
     def __hash__(self):
@@ -41,56 +41,89 @@ class Graph(digraph):
                 return n
         raise KeyError('Node (%d %d) not found!' %(i, j))
 
+    def __init__(self, s1, s2):
+        self.__s1 = s1
+        self.__s2 = s2
+        digraph.__init__(self)
 
-def build_graph(s1, s2):
-    #gr.parents = gr.incidents
-    #gr.childs = gr.neighbors
+        #def build_graph(s1, s2):
+        #gr.parents = gr.incidents
+        #gr.childs = gr.neighbors
 
-    # useful for test on the whole graph
-    tot_len = len(s1)+len(s2)
-    s1_pad, s2_pad = s1[:], s2[:]
-    while len(s1_pad) <= tot_len:
-        s1_pad += '-'
-    while len(s2_pad) <= tot_len:
-        s2_pad += '-'
+        # useful for test on the whole graph
+        tot_len = len(s1)+len(s2)
+        s1_pad, s2_pad = s1[:], s2[:]
+        while len(s1_pad) <= tot_len:
+            s1_pad += '-'
+        while len(s2_pad) <= tot_len:
+            s2_pad += '-'
 
-    # build all nodes
-    gr = Graph()
-    for i, chi in enumerate(s1_pad):
-        for j, chj in enumerate(s2_pad):
-            # if we're out of both strings length we are comparing two gaps
-            if (i <= len(s1) or j <= len(s2)):
-                # can't have more than len(s1) gaps in s2 and vice versa
-                if ((i >= j) and ((i-j) <= len(s1))) or ((i <= j) and ((j - i) <= len(s2))):
-                    node = GNode(i, chi, j, chj)
-                    gr.add_node(node)
+        # build all nodes
+        for i, chi in enumerate(s1_pad):
+            for j, chj in enumerate(s2_pad):
+                # if we're out of both strings length we are comparing two gaps
+                if (i <= len(s1) and j <= len(s2)):
+                    # can't have more than len(s1) gaps in s2 and vice versa
+                    if ((i >= j) and ((i-j) <= len(s1))) or ((i <= j) and ((j - i) <= len(s2))):
+                        node = GNode(i, chi, j, chj)
+                        self.add_node(node)
 
-    # add the links between the nodes
-    for n in gr.nodes():
-        for h, k in [(n.i+1, n.j), (n.i+1, n.j+1), (n.i, n.j+1)]:
-            try:
-                nn = gr.get_node(h, k)
-            except KeyError, e:
-                pass
-            else:
-                # if we're comparing a gap, there is only one way to go
-                if (n.i >= len(s1) and (nn.i==n.i+1 and nn.j==n.j+1))\
-                        or (n.j >= len(s2) and (nn.i==n.i+1 and nn.j==n.j+1)):
-                    add_edge = True
-                elif (n.i < len(s1) and n.j < len(s2)):
-                    # if we compare two chars every direction is possible
-                    add_edge = True
+        # add the links between the nodes
+        for n in self.nodes():
+            for h, k in [(n.i+1, n.j), (n.i+1, n.j+1), (n.i, n.j+1)]:
+                try:
+                    nn = self.get_node(h, k)
+                except KeyError, e:
+                    pass
                 else:
-                    add_edge = False
+                    ## if we're comparing a gap, there is only one way to go
+                    if (n.i >= len(s1) and (nn.i==n.i+1 and nn.j==n.j+1))\
+                            or (n.j >= len(s2) and (nn.i==n.i+1 and nn.j==n.j+1)):
+                        add_edge = True
+                    elif (n.i < len(s1) and n.j < len(s2)):
+                        # if we compare two chars every direction is possible
+                        add_edge = True
+                    else:
+                        add_edge = False
 
-                if add_edge:
-                    wt = weight_step(n, nn)
-                    gr.add_edge((n, nn), wt=wt)
-                    #print 'Added link from %s to %s, wt %d' %(n, nn, wt)
+                    if add_edge:
+                        wt = self.weight(n, nn)
+                        self.add_edge((n, nn), wt=wt)
+                        #print 'Added link from %s to %s, wt %d' %(n, nn, wt)
 
-    return gr
+    def weight(self, par, chl):
+        # verify that par is the parent and chl the child
+        if par.i > chl.i or par.j > chl.j:
+            par, chl = chl, par
+        # ottimizza "liane"
+        # somma tutti i pesi degli archi dei percorsi "obbligati" del grafo
+        if (chl.ch_i == '-'):
+            partial = 0
+            for j, chj in enumerate(self.__s2[chl.j:]):
+                partial += S[chl.ch_i][chj]
+            return partial
+        elif (chl.ch_j == '-'):
+            partial = 0
+            for j, chi in enumerate(self.__s1[chl.i:]):
+                partial += S[chl.ch_j][chi]
+            return partial
+        else:
+            # altrimenti calcola il peso di una transizione semplice
+            return self.weight_single_step(par, chl)
+
+    def weight_single_step(self, par, chl):
+        if par.i == chl.i:
+            h = '-'
+        else:
+            h = par.ch_i
+        if par.j == chl.j:
+            k = '-'
+        else:
+            k = par.ch_j
+        return S[h][k]
 
 def get_align(steps):
+    print steps
     s1, s2 = '', ''
     for i, step in enumerate(steps):
         if i < (len(steps)-1):
@@ -126,25 +159,35 @@ def print_cost(steps):
     cost = get_cost(steps)
     print 'Cost',cost
 
-def weight_step(par, chl):
-    # verify that par is the parent and chl the child
-    if par.i > chl.i or par.j > chl.j:
-        par, chl = chl, par
-    if par.i == chl.i:
-        h = '-'
-    else:
-        h = par.ch_i
-    if par.j == chl.j:
-        k = '-'
-    else:
-        k = par.ch_j
-    return S[h][k]
+#def weight_single_step(par, chl):
+#    if par.i == chl.i:
+#        h = '-'
+#    else:
+#        h = par.ch_i
+#    if par.j == chl.j:
+#        k = '-'
+#    else:
+#        k = par.ch_j
+#    return S[h][k]
+#
+#def weight_step(gr, par, chl):
+#    # verify that par is the parent and chl the child
+#    if par.i > chl.i or par.j > chl.j:
+#        par, chl = chl, par
+#    # ottimizza "liane"
+#    #print chl, neighbors()
+#    if (chl.ch_i == '-') or (chl.ch_j == '-'):
+#        return
+#    else:
+#        return weight_single_step(par, chl)
+
 
 def add_end_node(gr, s1, s2):
     end_node = GNode(-1, 'end', -1, 'end')
     gr.add_node(end_node)
     #real_end_nodes = [n for n in gr.nodes() if len(gr.neighbors(n))==0]
-    real_end_nodes = [n for n in gr.nodes() if (n.i >= len(s1)) and (n.j >= len(s2))]
+    #real_end_nodes = [n for n in gr.nodes() if (n.i >= len(s1)) and (n.j >= len(s2))]
+    real_end_nodes = [n for n in gr.nodes() if (n.i >= len(s1)) or (n.j >= len(s2))]
     for n in real_end_nodes:
         gr.add_edge((n, end_node), wt=0)
     return end_node
