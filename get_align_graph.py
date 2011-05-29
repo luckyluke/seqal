@@ -17,6 +17,7 @@ if __name__=='__main__':
     parser.add_option('-H', '--heuristic',
             help='Choose the heuristic to be used with A*.',
             default='none', choices=hlist.keys())
+    parser.add_option('-d', '--debug', help='Debug heuristic', action='store_true')
     options, args = parser.parse_args()
     if len(args) < 2:
         parser.print_help()
@@ -31,27 +32,32 @@ if __name__=='__main__':
     ## add fake end node
     end_node = add_end_node(gr, s1, s2)
 
-    # use A* without considering heuristic, which degenerates into a dijkstra
-    #opt = heuristic_search(gr, gr.get_node(0, 0), end_node, lambda s, e:0)
-    print 'No heuristic (dijkstra)'
-    opt = heuristic_search(gr, gr.get_node(0, 0), end_node, get_h('none'))
-    print_align(opt)
-    print_cost(opt)
-
-    print '\nString_correlation'
-    #opt = heuristic_search(gr, gr.get_node(0, 0), end_node, get_h('sc', s1, s2, cmp=True, gr=gr))
-    opt = heuristic_search(gr, gr.get_node(0, 0), end_node, get_h('sc', s1, s2))
-    print_align(opt)
-    print_cost(opt)
-
-    print '\nMinimum residual cost'
-    opt = heuristic_search(gr, gr.get_node(0, 0), end_node, get_h('mrc', s1, s2, cmp=True, gr=gr))
-    print_align(opt)
-    print_cost(opt)
-
-    #print '\nHeuristic: %s' %options.heuristic
-    #opt = heuristic_search(gr, gr.get_node(0, 0), end_node, get_h(options.heuristic, s1, s2))
+    ## use A* without considering heuristic, which degenerates into a dijkstra
+    ##opt = heuristic_search(gr, gr.get_node(0, 0), end_node, lambda s, e:0)
+    #print 'No heuristic (dijkstra)'
+    #opt = heuristic_search(gr, gr.get_node(0, 0), end_node, get_h('none'))
     #print_align(opt)
+    #print_cost(opt)
+
+    #print '\nString_correlation'
+    ##opt = heuristic_search(gr, gr.get_node(0, 0), end_node, get_h('sc', s1, s2, cmp=True, gr=gr))
+    #opt = heuristic_search(gr, gr.get_node(0, 0), end_node, get_h('sc', s1, s2))
+    #print_align(opt)
+    #print_cost(opt)
+
+    #print '\nMinimum residual cost'
+    #opt = heuristic_search(gr, gr.get_node(0, 0), end_node, get_h('mrc', s1, s2, cmp=True, gr=gr))
+    #print_align(opt)
+    #print_cost(opt)
+
+    hargs={}
+    if options.debug:
+        hargs = dict(cmp=True, gr=gr)
+
+    print '\nHeuristic: %s' %options.heuristic
+    opt = heuristic_search(gr, gr.get_node(0, 0), end_node, get_h(options.heuristic, s1, s2, **hargs))
+    print_align(opt)
+    print_cost(opt)
 
     # get all shortest paths
     # this dijkstra implementation finds ALL paths, which is not needed

@@ -103,7 +103,7 @@ def string_correlation(node, end, s1, s2):
 hlist = {'mrc':minimum_residual_cost,
          'sc':string_correlation,
          # fake heuristic
-         'none':lambda n, e: 0
+         'none':lambda n, e, s1, s2: 0
          }
 
 def get_h(name, *args, **kw):
@@ -118,7 +118,7 @@ def get_h(name, *args, **kw):
         if kw.get('cmp', None):
             # allow to compare an heuristic with the real distance
             gr = kw.get('gr')
-            ret = heuristic_search(gr, node, end, hlist['none'])
+            ret = heuristic_search(gr, node, end, get_h('none', *args))
             real_cost = get_cost(ret)
             print node, 'Heuristic cost:', h_cost, 'Real cost:',real_cost
         return h_cost
