@@ -12,9 +12,14 @@ def minimum_residual_cost(node, end, s1, s2):
     compute heuristic based on the minumin cost based on
     the chars in the residual strings
     """
+    if node == end:
+        return 0
     chars = ['a', 'c', 'g', 't', '-']
     hs1 = s1[node.i:]
     hs2 = s2[node.j:]
+    if hs2 == '' or hs1 == '':
+        # no decisions left
+        return 0
     hs = hs1[:]+hs2[:]
     for ch in hs:
         if ch in chars:
@@ -23,7 +28,7 @@ def minimum_residual_cost(node, end, s1, s2):
     S_red = S.copy()
     for k in S_red.keys():
         S_red[k] = S[k].copy()
-        S_red[k].pop(k)
+        #S_red[k].pop(k)
     #for ch in chars:
     #    S_red.pop(ch)
     ##for k in S_red.keys():
@@ -35,7 +40,8 @@ def minimum_residual_cost(node, end, s1, s2):
     if len(all_costs) == 0:
         # end reached
         return 0
-    heust =  min(all_costs)*(len(s1) - node.i + len(s2) - node.j)
+    #heust =  min(all_costs)*(len(s1) - node.i + len(s2) - node.j)
+    heust = min(all_costs)*min([len(hs1), len(hs2)])
     return heust
 
 #
@@ -114,7 +120,7 @@ def get_h(name, *args, **kw):
             gr = kw.get('gr')
             ret = heuristic_search(gr, node, end, hlist['none'])
             real_cost = get_cost(ret)
-            print 'Heuristic cost:', h_cost, 'Real cost:',real_cost
+            print node, 'Heuristic cost:', h_cost, 'Real cost:',real_cost
         return h_cost
     return h
 

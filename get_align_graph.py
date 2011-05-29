@@ -45,7 +45,7 @@ if __name__=='__main__':
     print_cost(opt)
 
     print '\nMinimum residual cost'
-    opt = heuristic_search(gr, gr.get_node(0, 0), end_node, get_h('mrc', s1, s2))
+    opt = heuristic_search(gr, gr.get_node(0, 0), end_node, get_h('mrc', s1, s2, cmp=True, gr=gr))
     print_align(opt)
     print_cost(opt)
 
