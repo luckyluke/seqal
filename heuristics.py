@@ -19,9 +19,13 @@ def minimum_residual_cost(node, end, s1, s2):
     chars = ['a', 'c', 'g', 't', '-']
     hs1 = s1[node.i:]
     hs2 = s2[node.j:]
+<<<<<<< HEAD
+    hs1,hs2 = remove_dup_chars(hs1,hs2)
+=======
     if hs2 == '' or hs1 == '':
         # no decisions left
         return 0
+>>>>>>> becc2cba3c6e6199e4f85b62a807938a14e9f6df
     hs = hs1[:]+hs2[:]
     for ch in hs:
         if ch in chars:
@@ -127,4 +131,12 @@ def get_h(name, *args, **kw):
                 print 'BAD H'
         return h_cost
     return h
+
+def remove_dup_chars(hs1,hs2):
+    for i,c in enumerate(hs1):
+        j=hs2.find(c)
+        if j!=-1:
+            hs1=hs1[:i]+hs1[i+1:]
+            hs2=hs2[:j]+hs2[j+1:]
+    return hs1,hs2
 
