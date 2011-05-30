@@ -24,7 +24,7 @@ class GNode(object):
         self.ch_i, self.ch_j = ch_i, ch_j
 
     def __str__(self):
-        return "(%d %d)" %(self.i, self.j)
+        return "(%d%s %d%s)" %(self.i, self.ch_i, self.j, self.ch_j)
     __repr__ = __str__
 
     def __hash__(self):

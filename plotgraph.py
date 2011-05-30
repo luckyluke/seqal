@@ -11,7 +11,7 @@ from pygraph.readwrite.dot import write
 
 import gv
 
-from common_graph import build_graph
+from common_graph import *
 
 if __name__=='__main__':
     parser = optparse.OptionParser()
@@ -25,9 +25,10 @@ if __name__=='__main__':
         s1, s2 = s2, s1
 
     gr = build_graph(s1, s2)
+    #add_end_node(gr, s1, s2)
 
     # print the graph
-    dot = write(gr)
+    dot = write(gr, True)
     grv = gv.readstring(dot)
     gv.layout(grv, 'dot')
     gv.render(grv, 'svg', 'graph.svg')
