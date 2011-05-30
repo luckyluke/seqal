@@ -6,7 +6,7 @@ import optparse
 #from pygraph.classes.graph import graph
 from pygraph.classes.digraph import digraph
 #from pygraph.algorithms.searching import breadth_first_search
-from pygraph.algorithms.minmax import heuristic_search, shortest_path
+from pygraph.algorithms.minmax import heuristic_search, shortest_path, shortest_path_bellman_ford
 from pygraph.readwrite.dot import write
 
 from common_graph import *
@@ -55,9 +55,19 @@ if __name__=='__main__':
         hargs = dict(cmp=True, gr=gr)
 
     print '\nHeuristic: %s' %options.heuristic
-    opt = heuristic_search(gr, gr.get_node(0, 0), end_node, get_h(options.heuristic, s1, s2, **hargs))
-    print_align(opt)
-    print_cost(opt)
+    #opt = heuristic_search(gr, gr.get_node(0, 0), end_node, get_h(options.heuristic, s1, s2, **hargs))
+    #print opt
+    #print_align(opt)
+    #print_cost(opt)
+    st, opt = shortest_path_bellman_ford(gr, gr.get_node(0, 0))
+    n = end_node
+    path = []
+    while n:
+        path.append(n)
+        n = st[n]
+    path.reverse()
+    print_align(path)
+    print 'Costo:',opt[end_node]
 
     # get all shortest paths
     # this dijkstra implementation finds ALL paths, which is not needed
